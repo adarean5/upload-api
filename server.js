@@ -1,12 +1,16 @@
+const File = require('./models/File');
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const child_process = require('child_process');
+const fs = require('fs');
+var url = require('url');
 
 //Initiate our app
 const app = express();
 
+const UPLOADS_FOLDER = './uploads/';
 const CHECK_AUTH_FOR_EVERY_REQUEST = false;
 const AUTH_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
@@ -94,11 +98,53 @@ app.post('/file-upload', upload.single('file-to-upload'), (req, res) => {
 
     uploadProcess.on('close', function(code) {
       console.log('Upload process exited with code ' + code);
+      res.end();
     });
-
-    res.redirect('/');
+  } else {
+    res.end();
   }
-  res.end('Please pick a file');
+});
+
+// File download
+app.post('/download', function(req, res) {
+  const fileName = req.body.fileName;
+  console.log('POST request for ' + fileName);
+  res.sendFile(__dirname + '/uploads/' + fileName, err => {
+    console.log('FIle ' + fileName + ' sent');
+  });
+});
+
+// Delete file
+app.delete('/delete/:fileName', function(req, res) {
+  const fileName = [req.params.fileName].toString();
+
+  console.log('DELETE request for file ' + fileName);
+
+  fs.unlink(__dirname + '/uploads/' + fileName, err => {
+    res.end();
+  });
+});
+
+// List all files
+app.get('/list-files', function(req, res) {
+  console.log(new Date(), ' GET request to list-files');
+  let fileArray = [];
+  let filesToProcess = -1;
+  fs.readdir(UPLOADS_FOLDER, (err, files) => {
+    filesToProcess = files.length;
+    files.forEach(file => {
+      const fileName = file;
+      fs.stat(UPLOADS_FOLDER + file, (err, stats) => {
+        fileArray.push(new File(fileName, stats['size'], stats['birthtime']));
+        console.log(new File(fileName, stats['size'], stats['birthtime']));
+        filesToProcess--;
+        console.log(filesToProcess);
+        if (filesToProcess === 0) {
+          res.end(JSON.stringify(fileArray));
+        }
+      });
+    });
+  });
 });
 
 app.post('/login', function(req, res) {
