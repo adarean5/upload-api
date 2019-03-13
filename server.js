@@ -53,27 +53,29 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(checkAuthentication);
 
+// Commented code was used strictly for testing purposes and serves no purpose in the API
+
 // Load the homepage
-app.get('/', function(req, res) {
+/*app.get('/', function(req, res) {
   console.log('Got a GET request for index.html.');
   res.sendFile(__dirname + '/public/index.html');
-});
+});*/
 
 // Load the upload file page
-app.get('/upload-page', function(req, res) {
+/*app.get('/upload-page', function(req, res) {
   console.log('Got a GET request for file upload.');
   res.sendFile(__dirname + '/public/upload.html');
-});
+});*/
 
 // Post form
-app.post('/process-post', urlEncodedParser, function(req, res) {
+/*app.post('/process-post', urlEncodedParser, function(req, res) {
   response = {
     first_name: req.body.first_name,
     last_name: req.body.last_name
   };
   console.log(response);
   res.end(JSON.stringify(response));
-});
+});*/
 
 // File upload
 app.post('/file-upload', upload.single('file-to-upload'), (req, res) => {
@@ -109,9 +111,12 @@ app.post('/file-upload', upload.single('file-to-upload'), (req, res) => {
 app.post('/download', function(req, res) {
   const fileName = req.body.fileName;
   console.log('POST request for ' + fileName);
-  res.sendFile(__dirname + '/uploads/' + fileName, err => {
-    console.log('FIle ' + fileName + ' sent');
-  });
+  // Testing timeout
+  setTimeout(() => {
+    res.sendFile(__dirname + '/uploads/' + fileName, err => {
+      console.log('FIle ' + fileName + ' sent');
+    });
+  }, 150);
 });
 
 // Delete file
